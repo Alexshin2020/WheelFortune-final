@@ -80,9 +80,18 @@ public class WheelView extends View {
             isSpinning = false;
             int index = (int) (360 - (targetAngle % 360)) * items.size() / 360;
             index = (index + items.size()) % items.size();
+
+            String selectedItem = ""; // Initialize with a default value
+            if (items.size() > 0) {
+                selectedItem = items.get(index); // Store the result in resultTV
+            } else {
+                selectedItem = "Нет сектора!"; // Store the result in resultTV
+            }
+
             if (listener != null) {
                 int finalIndex = index;
-                post(() -> listener.onRoundItemSelected(finalIndex));
+                String finalSelectedItem = selectedItem;
+                post(() -> listener.onRoundItemSelected(finalIndex, finalSelectedItem)); // Send the value
             }
             postInvalidate();
         }).start();
@@ -118,8 +127,8 @@ public class WheelView extends View {
         canvas.drawLine(width / 2, 0, width / 2, height / 2, paint);
         canvas.restore();
     }
-
+    // *** ОЧЕНЬ ВАЖНО: Интерфейс RoundItemSelectedListener должен быть ВНУТРИ WheelView! ***
     public interface RoundItemSelectedListener {
-        void onRoundItemSelected(int index);
+        void onRoundItemSelected(int index, String selectedItem);
     }
 }

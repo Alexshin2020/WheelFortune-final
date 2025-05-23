@@ -7,6 +7,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -14,9 +15,9 @@ public class MainActivity extends AppCompatActivity {
 
     private WheelView wheelView;
     private TextView resultTV;
-    private Button addSectorButton, resetBtn;
+    private Button addSectorButton, resetBtn, removeSectorButton;
     private EditText sectorNameEditText;
-    List<String> nameList = new ArrayList<>();
+    private List<String> nameList = new ArrayList<>();
     private DatabaseHelper dbHelper;
     private TextView historyTextView;
 
@@ -31,6 +32,7 @@ public class MainActivity extends AppCompatActivity {
         resultTV = findViewById(R.id.winnerVal);
         addSectorButton = findViewById(R.id.addSectorButton);
         resetBtn = findViewById(R.id.resetBtn);
+        removeSectorButton = findViewById(R.id.removeSectorButton);
         sectorNameEditText = findViewById(R.id.sectorNameEditText);
         historyTextView = findViewById(R.id.historyTextView);
 
@@ -45,17 +47,9 @@ public class MainActivity extends AppCompatActivity {
         wheelView.setData(nameList);
         wheelView.setRoundItemSelectedListener(new WheelView.RoundItemSelectedListener() {
             @Override
-            public void onRoundItemSelected(int index) {
-                String prize = nameList.get(index);
-                resultTV.setText(prize);
-
-                long rowId = dbHelper.addSpin(prize);
-                if (rowId == -1) {
-                    Log.e("MainActivity", "Failed to add spin to history");
-                } else {
-                    Log.d("MainActivity", "Spin added to history. Row ID: " + rowId);
-                }
-                updateHistoryTextView();
+            public void onRoundItemSelected(int index, String selectedItem) {
+                resultTV.setText(selectedItem); // Отображаем результат
+                updatePrizeAndHistory(selectedItem); // Сохраняем и обновляем историю
             }
         });
 
@@ -66,7 +60,7 @@ public class MainActivity extends AppCompatActivity {
                 if (!sectorName.isEmpty()) {
                     nameList.add(sectorName);
                     wheelView.setData(nameList);
-                    sectorNameEditText.setText(""); // Очистить поле ввода
+                    sectorNameEditText.setText("");
                 }
             }
         });
@@ -79,6 +73,28 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        removeSectorButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (nameList.size() > 0) {
+                    nameList.remove(nameList.size() - 1);
+                    wheelView.setData(nameList);
+                } else {
+                    Toast.makeText(MainActivity.this, "Нечего удалять!", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+
+        updateHistoryTextView();
+    }
+
+    private void updatePrizeAndHistory(String prize) {
+        long rowId = dbHelper.addSpin(prize);
+        if (rowId == -1) {
+            Log.e("MainActivity", "Failed to add spin to history");
+        } else {
+            Log.d("MainActivity", "Spin added to history. Row ID: " + rowId);
+        }
         updateHistoryTextView();
     }
 
@@ -96,6 +112,7 @@ public class MainActivity extends AppCompatActivity {
         super.onDestroy();
         dbHelper.close();
     }
+
     public void spin(View view) {
         wheelView.spin();
     }

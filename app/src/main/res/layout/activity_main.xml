@@ -64,6 +64,12 @@
             android:text="Reset"
             android:layout_marginStart="10dp"/>
 
+        <Button
+            android:id="@+id/removeSectorButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Удалить сектор" />
+
     </LinearLayout>
 
     <TextView
