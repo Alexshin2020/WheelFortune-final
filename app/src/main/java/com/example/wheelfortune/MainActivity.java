@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.TextView;
 import java.util.ArrayList;
 import java.util.List;
@@ -13,7 +14,8 @@ public class MainActivity extends AppCompatActivity {
 
     private WheelView wheelView;
     private TextView resultTV;
-    private Button addBtn, resetBtn;
+    private Button addSectorButton, resetBtn;
+    private EditText sectorNameEditText;
     List<String> nameList = new ArrayList<>();
     private DatabaseHelper dbHelper;
     private TextView historyTextView;
@@ -27,10 +29,12 @@ public class MainActivity extends AppCompatActivity {
 
         wheelView = findViewById(R.id.wheelview);
         resultTV = findViewById(R.id.winnerVal);
-        addBtn = findViewById(R.id.addBtn);
+        addSectorButton = findViewById(R.id.addSectorButton);
         resetBtn = findViewById(R.id.resetBtn);
+        sectorNameEditText = findViewById(R.id.sectorNameEditText);
         historyTextView = findViewById(R.id.historyTextView);
 
+        // Изначальные сектора
         nameList.add("100");
         nameList.add("200");
         nameList.add("300");
@@ -39,7 +43,6 @@ public class MainActivity extends AppCompatActivity {
         nameList.add("600");
 
         wheelView.setData(nameList);
-        // *** ОЧЕНЬ ВАЖНО: Используйте WheelView.RoundItemSelectedListener ***
         wheelView.setRoundItemSelectedListener(new WheelView.RoundItemSelectedListener() {
             @Override
             public void onRoundItemSelected(int index) {
@@ -56,11 +59,15 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        addBtn.setOnClickListener(new View.OnClickListener() {
+        addSectorButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                nameList.add("700");
-                wheelView.setData(nameList);
+                String sectorName = sectorNameEditText.getText().toString();
+                if (!sectorName.isEmpty()) {
+                    nameList.add(sectorName);
+                    wheelView.setData(nameList);
+                    sectorNameEditText.setText(""); // Очистить поле ввода
+                }
             }
         });
 
