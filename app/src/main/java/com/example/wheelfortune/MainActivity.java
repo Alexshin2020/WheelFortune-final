@@ -1,44 +1,95 @@
 package com.example.wheelfortune;
 
-import android.os.Bundle;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.FrameLayout;
-
 import androidx.appcompat.app.AppCompatActivity;
+import android.os.Bundle;
+import android.util.Log;
+import android.view.View;
+import android.widget.Button;
+import android.widget.TextView;
+import java.util.ArrayList;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
-    private EditText itemName;
-    private EditText itemChance;
-    private Button addItemButton;
-    private Button spinButton;
-    private FrameLayout wheelContainer;
+
     private WheelView wheelView;
+    private TextView resultTV;
+    private Button addBtn, resetBtn;
+    List<String> nameList = new ArrayList<>();
+    private DatabaseHelper dbHelper;
+    private TextView historyTextView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        itemName = findViewById(R.id.itemName);
-        itemChance = findViewById(R.id.itemChance);
-        addItemButton = findViewById(R.id.addItemButton);
-        spinButton = findViewById(R.id.spinButton);
-        wheelContainer = findViewById(R.id.wheelContainer);
+        dbHelper = new DatabaseHelper(this);
 
-        wheelView = new WheelView(this, null);
-        wheelContainer.addView(wheelView);
+        wheelView = findViewById(R.id.wheelview);
+        resultTV = findViewById(R.id.winnerVal);
+        addBtn = findViewById(R.id.addBtn);
+        resetBtn = findViewById(R.id.resetBtn);
+        historyTextView = findViewById(R.id.historyTextView);
 
-        addItemButton.setOnClickListener(v -> {
-            String name = itemName.getText().toString();
-            float chance = Float.parseFloat(itemChance.getText().toString());
-            wheelView.addItem(name, chance);
-            itemName.setText("");
-            itemChance.setText("");
+        nameList.add("100");
+        nameList.add("200");
+        nameList.add("300");
+        nameList.add("400");
+        nameList.add("500");
+        nameList.add("600");
+
+        wheelView.setData(nameList);
+        // *** ОЧЕНЬ ВАЖНО: Используйте WheelView.RoundItemSelectedListener ***
+        wheelView.setRoundItemSelectedListener(new WheelView.RoundItemSelectedListener() {
+            @Override
+            public void onRoundItemSelected(int index) {
+                String prize = nameList.get(index);
+                resultTV.setText(prize);
+
+                long rowId = dbHelper.addSpin(prize);
+                if (rowId == -1) {
+                    Log.e("MainActivity", "Failed to add spin to history");
+                } else {
+                    Log.d("MainActivity", "Spin added to history. Row ID: " + rowId);
+                }
+                updateHistoryTextView();
+            }
         });
 
-        spinButton.setOnClickListener(v -> {
-            wheelView.spin();
+        addBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                nameList.add("700");
+                wheelView.setData(nameList);
+            }
         });
+
+        resetBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                wheelView.reset();
+                resultTV.setText("");
+            }
+        });
+
+        updateHistoryTextView();
+    }
+
+    private void updateHistoryTextView() {
+        List<SpinHistoryItem> history = dbHelper.getAllSpins();
+        StringBuilder historyText = new StringBuilder();
+        for (SpinHistoryItem item : history) {
+            historyText.append(item.getDateTime()).append(": ").append(item.getPrize()).append("\n");
+        }
+        historyTextView.setText(historyText.toString());
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        dbHelper.close();
+    }
+    public void spin(View view) {
+        wheelView.spin();
     }
 }
